@@ -9,7 +9,7 @@ class BasePage:
 
     def __init__(self, browser):
         self.browser = browser
-        self.base_url = 'http://localhost/admin'
+        self.base_url = 'https://localhost/admin'
 
     def find_element(self, locator, time=5):
         return WebDriverWait(self.browser, time).until(
