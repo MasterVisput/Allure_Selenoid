@@ -1,6 +1,7 @@
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+import allure
 
 from Test_suite.pages.selectors import LoginAdminPageSelector, DashboardPageSelectors
 
@@ -9,19 +10,37 @@ class BasePage:
 
     def __init__(self, browser):
         self.browser = browser
-        self.base_url = 'http://localhost/admin'
+        self.base_url = 'https://localhost/admin'
 
     def find_element(self, locator, time=5):
-        return WebDriverWait(self.browser, time).until(
-            EC.element_to_be_clickable(locator))
+        try:
+            return WebDriverWait(self.browser, time).until(
+                EC.element_to_be_clickable(locator))
+        except TimeoutException:
+            allure.attach(body=self.browser.get_screenshot_as_png(),
+                          name='screenshot_image',
+                          attachment_type=allure.attachment_type.PNG)
+            raise AssertionError
 
     def find_elements(self, locator, time=5):
-        return WebDriverWait(self.browser, time).until(
-            EC.visibility_of_all_elements_located(locator))
+        try:
+            return WebDriverWait(self.browser, time).until(
+                EC.visibility_of_all_elements_located(locator))
+        except TimeoutException:
+            allure.attach(body=self.browser.get_screenshot_as_png(),
+                          name='screenshot_image',
+                          attachment_type=allure.attachment_type.PNG)
+            raise AssertionError
 
     def find_dom_element(self, locator, time=5):
-        return WebDriverWait(self.browser, time).until(
-            EC.presence_of_element_located(locator))
+        try:
+            return WebDriverWait(self.browser, time).until(
+                EC.presence_of_element_located(locator))
+        except TimeoutException:
+            allure.attach(body=self.browser.get_screenshot_as_png(),
+                          name='screenshot_image',
+                          attachment_type=allure.attachment_type.PNG)
+            raise AssertionError
 
     def is_element_present(self, locator, time=5):
         try:
@@ -29,10 +48,19 @@ class BasePage:
                 EC.presence_of_all_elements_located(locator))
             return True
         except TimeoutException:
-            return False
+            allure.attach(body=self.browser.get_screenshot_as_png(),
+                          name='screenshot_image',
+                          attachment_type=allure.attachment_type.PNG)
+            raise AssertionError
 
     def open(self):
-        return self.browser.get(self.base_url)
+        try:
+            return self.browser.get(self.base_url)
+        except TimeoutException:
+            allure.attach(body=self.browser.get_screenshot_as_png(),
+                          name='screenshot_image',
+                          attachment_type=allure.attachment_type.PNG)
+            raise AssertionError
 
     def login_admin(self):
         username_field = self.find_element(LoginAdminPageSelector.USERNAME_FIELD)
@@ -45,7 +73,10 @@ class BasePage:
             wait = WebDriverWait(self.browser, 5).until(EC.title_contains('Dashboard'))
             return self.browser.title
         except TimeoutException:
-            return 'TimeoutException'
+            allure.attach(body=self.browser.get_screenshot_as_png(),
+                          name='screenshot_image',
+                          attachment_type=allure.attachment_type.PNG)
+            raise AssertionError
 
     def log_out(self):
         logout_link = self.find_element(DashboardPageSelectors.LOGOUT_LINK)
@@ -54,4 +85,7 @@ class BasePage:
             wait = WebDriverWait(self.browser, 5).until(EC.title_contains('Administration'))
             return self.browser.title
         except TimeoutException:
-            return 'TimeoutException'
+            allure.attach(body=self.browser.get_screenshot_as_png(),
+                          name='screenshot_image',
+                          attachment_type=allure.attachment_type.PNG)
+            raise AssertionError
