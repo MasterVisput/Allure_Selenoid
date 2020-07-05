@@ -1,67 +1,8 @@
-# import pytest
-# from selenium import webdriver
-# from selenium.webdriver import ChromeOptions
-#
-# from Test_suite.pages.admin_categories_page import AdminCategoriesPage
-# from Test_suite.pages.admin_product_page import AdminProductPage
-#
-#
-# def pytest_addoption(parser):
-#     parser.addoption(
-#         '--browser',
-#         action='store',
-#         default='chrome',
-#         help='This is browser for testing',
-#         choices=["chrome", "firefox", "opera", "yandex"]
-#     )
-#     parser.addoption('--selenoid', action='store', default='localhost')
-#
-#
-# @pytest.fixture()
-# def remote(request):
-#     browser = request.config.getoption('--browser')
-#     selenoid = request.config.getoption('--selenoid')
-#     executor_url = f'http://{selenoid}:4444/wd/hub'
-#     caps = {'browserName': browser,
-#             'enableVnc': True,
-#             'version': '83.0',
-#             'enableVideo': True,
-#             'enableLog': True,
-#             'screenResolution': '1280x720',
-#             'name': request.node.name}
-#     options = ChromeOptions()
-#     options.add_argument('--ignore-certificate-errors')
-#     driver = webdriver.Remote(options=options, command_executor=executor_url, desired_capabilities=caps)
-#     request.addfinalizer(driver.quit)
-#     return driver
-#
-#
-# @pytest.fixture()
-# def setup_product_page(admin_product_page):
-#     if not admin_product_page.is_product_in_tab(p_name='Mouse'):
-#         admin_product_page.add_new_product(p_name='Mouse', m_tag='pereferi')
-#
-#
-# @pytest.fixture()
-# def admin_product_page(remote):
-#     page = AdminProductPage(remote)
-#     page.open()
-#     page.login_admin()
-#     page.go_to_product_tab()
-#     return page
-#
-#
-# @pytest.fixture()
-# def admin_categories_page(remote):
-#     page = AdminCategoriesPage(remote)
-#     page.open()
-#     page.login_admin()
-#     page.go_to_categories()
-#     return page
 
 import pytest
 import allure
 from selenium import webdriver
+from Test_suite.DB.client import DBClient
 from selenium.webdriver import ChromeOptions, FirefoxOptions
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
@@ -83,6 +24,11 @@ def pytest_addoption(parser):
 @pytest.fixture
 def browser_opt(request):
     return request.config.getoption('--browser')
+
+@pytest.fixture()
+def db_client():
+    db_client = DBClient()
+    return db_client
 
 
 @pytest.fixture()
@@ -117,9 +63,31 @@ def admin_product_page(remote):
 
 @allure.title('Проверка наличия нужного продукта')
 @pytest.fixture()
-def setup_product_page(admin_product_page):
-    if not admin_product_page.is_product_in_tab(p_name='Mouse'):
-        admin_product_page.add_new_product(p_name='Mouse', m_tag='pereferi')
+def setup_product_page(db_client, admin_product_page):
+    data_1 = {'language_id': '1',
+              'name': 'Vouse+21',
+              'tag': 'Per',
+              'meta_title': 'Per',
+              'meta_description': 'Perr',
+              'meta_keyword': 'perr'}
+    data_2 = { "model": "Mouse+21",
+                "sku": "Tr",
+                "upc": "TRT",
+                "ean": "wer",
+                "jan": "wer",
+                "isbn": "wer",
+                "mpn": "wer",
+                "location": "wer",
+                "quantity": 1,
+                "stock_status_id": 6,
+                "manufacturer_id": 0,
+                "tax_class_id": 0,
+                "date_added": "2020-07-04 14:44:24",
+                "date_modified": "2020-07-04 14:44:24"}
+    if len(admin_product_page.check_product_in_db(product_name='Vouse+21')) == 0:
+        admin_product_page.add_product_in_db(data=data_1)
+        admin_product_page.add_product_in_db(table_name='oc_product', data=data_2)
+        db_client.commit()
 
 
 @allure.title('Предустановки для теста')

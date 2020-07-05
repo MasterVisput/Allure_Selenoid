@@ -1,10 +1,8 @@
-pytest==5.4.1 # фреймворк для автотестов
+pytest==5.4.3 # фреймворк для автотестов
 selenium==3.141.0 # библиотека для взаимодействия с UI
-requests==2.22.0 # библиотека для работы с сетью
+requests==2.24.0 # библиотека для работы с сетью
 cerberus #для сверки данных
 browsermob-proxy==0.8.0
-pycrunch-trace # Для дебага.
-# импортируем from pycrunch_trace.client.api import trace
-# Добавлем @trace на метод, запускаем код, идём на app.pytrace.com для анализа
 pytest-xdist==1.32.0
 allure-pytest==2.8.16
+mariadb==1.0.0

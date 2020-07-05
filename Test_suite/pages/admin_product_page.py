@@ -1,8 +1,9 @@
+import allure
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
+from Test_suite.DB.client import DBClient
 from Test_suite.pages.base_page import BasePage
 from Test_suite.pages.selectors import DashboardPageSelectors, AddNewProductCartSelectors
-import allure
 
 
 class AdminProductPage(BasePage):
@@ -74,6 +75,7 @@ class AdminProductPage(BasePage):
 
     @allure.step('Удаляем продукт')
     def delete_product_from_tab(self, p_name='Mouse'):
+        self.is_product_in_tab(p_name=p_name)
         checkbox = self.get_element_from_tab_by_product_name(p_name=p_name,
                                                              selector=DashboardPageSelectors.CHECKBOX_IN_P_TAB)
         checkbox.click()
@@ -84,6 +86,7 @@ class AdminProductPage(BasePage):
 
     @allure.step('Редактируем продукт')
     def edit_product_from_tab(self, p_name='Mouse', new_p_name='Mouse+21'):
+        self.is_product_in_tab(p_name=p_name)
         edit_button = self.get_element_from_tab_by_product_name(p_name, selector=DashboardPageSelectors.EDIT_IN_P_TAB)
         edit_button.click()
         product_name_field = self.find_element(AddNewProductCartSelectors.PRODUCT_NAME)
@@ -103,3 +106,11 @@ class AdminProductPage(BasePage):
         self.browser.execute_script(js)
         input = self.browser.find_element_by_id('input-image')
         input.send_keys(path)
+
+    def check_product_in_db(self, table_name: str = 'oc_product_description', product_name: str = 'Mouse'):
+        db_client = DBClient()
+        return db_client.select_entity(table_name=table_name, column='name', conditions=f"name = '{product_name}'")
+
+    def add_product_in_db(self, table_name: str = 'oc_product_description', data: dict = None):
+        db_client = DBClient()
+        db_client.insert_entity(table_name=table_name, data=data)
