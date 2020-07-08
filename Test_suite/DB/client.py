@@ -24,6 +24,9 @@ class DBClient():
     def commit(self):
         self.connect.commit()
 
+    def close(self):
+        self.connect.close()
+
     def insert_entity(self, table_name: str, data: dict):
         cursor = self.connect.cursor()
         columns = ','.join(list(data.keys()))

@@ -28,7 +28,8 @@ def browser_opt(request):
 @pytest.fixture()
 def db_client():
     db_client = DBClient()
-    return db_client
+    yield db_client
+    db_client.close()
 
 
 @pytest.fixture()
