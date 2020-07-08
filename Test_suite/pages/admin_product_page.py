@@ -1,5 +1,7 @@
+import allure
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
+from Test_suite.DB.client import DBClient
 from Test_suite.pages.base_page import BasePage
 from Test_suite.pages.selectors import DashboardPageSelectors, AddNewProductCartSelectors
 
@@ -9,6 +11,7 @@ class AdminProductPage(BasePage):
         super().__init__(browser)
         self.driver = browser
 
+    @allure.step('Открываем таблицу с продуктами')
     def go_to_product_tab(self):
         dashboard_link = self.find_element(DashboardPageSelectors.DASHBOARD_LINK)
         dashboard_link.click()
@@ -17,13 +20,18 @@ class AdminProductPage(BasePage):
         product_link = self.find_element(DashboardPageSelectors.PRODUCT_LINK)
         product_link.click()
 
+    @allure.step('Возвращаем таблицу с продуктами')
     def return_product_tab(self):
         self.go_to_product_tab()
         try:
             return self.find_elements(DashboardPageSelectors.PRODUCT_TAB)
         except TimeoutException:
-            return 'TimeoutException'
+            allure.attach(body=self.browser.get_screenshot_as_png(),
+                          name='screenshot_image',
+                          attachment_type=allure.attachment_type.PNG)
+            raise AssertionError
 
+    @allure.step('Добавляем новый продукт')
     def add_new_product(self, p_name='Mouse', m_tag='pereferi', model='M23-546S'):
         add_new_product_button = self.find_element(DashboardPageSelectors.ADD_NEW)
         add_new_product_button.click()
@@ -37,6 +45,7 @@ class AdminProductPage(BasePage):
         save_button = self.find_element(AddNewProductCartSelectors.SAVE_BUTTON)
         save_button.click()
 
+    @allure.step('Проверяем что продукт в системе')
     def is_product_in_tab(self, p_name='Mouse'):
         self.go_to_product_tab()
         product_name_field = self.find_element(DashboardPageSelectors.PRODUCT_NAME_FIELD)
@@ -50,9 +59,12 @@ class AdminProductPage(BasePage):
                 if name.text == p_name:
                     return True
         except NoSuchElementException:
-            return False
-        return False
+            allure.attach(body=self.browser.get_screenshot_as_png(),
+                          name='screenshot_image',
+                          attachment_type=allure.attachment_type.PNG)
+            raise AssertionError
 
+    @allure.step('Получаем элемент')
     def get_element_from_tab_by_product_name(self, p_name='Mouse', selector=DashboardPageSelectors.EDIT_IN_P_TAB):
         products_tab = self.find_elements(DashboardPageSelectors.PRODUCT_TAB)
         for el in products_tab:
@@ -61,7 +73,9 @@ class AdminProductPage(BasePage):
                 return_element = el.find_element_by_css_selector(selector[1])
                 return return_element
 
+    @allure.step('Удаляем продукт')
     def delete_product_from_tab(self, p_name='Mouse'):
+        self.is_product_in_tab(p_name=p_name)
         checkbox = self.get_element_from_tab_by_product_name(p_name=p_name,
                                                              selector=DashboardPageSelectors.CHECKBOX_IN_P_TAB)
         checkbox.click()
@@ -70,7 +84,9 @@ class AdminProductPage(BasePage):
         confirm = self.browser.switch_to.alert
         confirm.accept()
 
+    @allure.step('Редактируем продукт')
     def edit_product_from_tab(self, p_name='Mouse', new_p_name='Mouse+21'):
+        self.is_product_in_tab(p_name=p_name)
         edit_button = self.get_element_from_tab_by_product_name(p_name, selector=DashboardPageSelectors.EDIT_IN_P_TAB)
         edit_button.click()
         product_name_field = self.find_element(AddNewProductCartSelectors.PRODUCT_NAME)
@@ -79,6 +95,7 @@ class AdminProductPage(BasePage):
         save_button = self.find_element(AddNewProductCartSelectors.SAVE_BUTTON)
         save_button.click()
 
+    @allure.step
     def add_image_to_product_by_name(self, path, p_name):
         edit_button = self.get_element_from_tab_by_product_name(p_name=p_name,
                                                                 selector=DashboardPageSelectors.EDIT_IN_P_TAB)
@@ -89,3 +106,11 @@ class AdminProductPage(BasePage):
         self.browser.execute_script(js)
         input = self.browser.find_element_by_id('input-image')
         input.send_keys(path)
+
+    def check_product_in_db(self, table_name: str = 'oc_product_description', product_name: str = 'Mouse'):
+        db_client = DBClient()
+        return db_client.select_entity(table_name=table_name, column='name', conditions=f"name = '{product_name}'")
+
+    def add_product_in_db(self, table_name: str = 'oc_product_description', data: dict = None):
+        db_client = DBClient()
+        db_client.insert_entity(table_name=table_name, data=data)
